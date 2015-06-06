@@ -11,6 +11,8 @@
         
         <include layout="@layout/top_bar"/>
         
+        <include layout="@layout/play_layout"/>
+        
     </LinearLayout>
 
 </FrameLayout>

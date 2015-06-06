@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+android:gravity="center"：将LinearLayout容器中的控件处于该容器中间
+android:layout_gravity="center"：使play_layout整个布局处于activity_main布局中间
+ 
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:layout_gravity="center"
+    android:orientation="vertical"
+    android:layout_marginTop="30dp" >
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/game_title" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="歌曲"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="260dp"
+        android:layout_height="wrap_content" >
+
+        <ImageView
+            android:id="@+id/iv_pan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/game_disc" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/game_disc_light" />
+
+        <ImageButton
+            android:id="@+id/btn_start_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/play_button_selector" />
+
+        <ImageView
+            android:id="@+id/iv_pan_bar"
+            android:layout_width="70dp"
+            android:layout_height="180dp"
+            android:layout_gravity="right"
+            android:background="@drawable/game_pin" />
+    </FrameLayout>
+
+</LinearLayout>
