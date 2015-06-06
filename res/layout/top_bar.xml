@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/index_bar" >
+    
+    <!-- 顶部左边返回按钮 -->
+    <ImageButton 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/back_button_selector"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="10dp" />
+    
+    <FrameLayout 
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="10dp">
+        
+        <ImageButton 
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:background="@drawable/game_coin_button_selector"
+	        android:layout_centerVertical="true" />
+        
+        <ImageView 
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/game_coin_icon"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="35dp"/>
+        
+        <TextView
+            android:id="@+id/txt_bar_coins"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|right"
+            android:layout_marginRight="15dp"
+            android:text="1000"
+            android:textColor="@color/white"
+            android:textStyle="bold" />
+        
+    </FrameLayout>
+
+</RelativeLayout>
