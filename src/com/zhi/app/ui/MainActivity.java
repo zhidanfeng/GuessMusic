@@ -1,21 +1,33 @@
 package com.zhi.app.ui;
 
+import java.util.ArrayList;
+
+import com.zhi.app.model.WordButton;
+import com.zhi.app.myview.MyGridView;
+import com.zhi.app.util.Utils;
+
 import android.app.Activity;
+import android.app.ActionBar.LayoutParams;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 public class MainActivity extends Activity {
 
 	private ImageView mViewPan;
 	private ImageView mViewPanBar;
 	private ImageButton mStartPlay;
+	private MyGridView mGridView;
+	private LinearLayout ll_select_word_container;
 
-	// add by zhidf 2015.6.6 ³ªÆ¬Ïà¹Ø¶¯»­
+	// add by zhidf 2015.6.6 å”±ç‰‡ç›¸å…³åŠ¨ç”»
 	private Animation mPanAnim;
 	private LinearInterpolator mPanInterpolator;
 
@@ -26,36 +38,43 @@ public class MainActivity extends Activity {
 	private LinearInterpolator mBarOutInterpolator;
 	// end
 
-	private boolean isRunning = false; // ¶¯»­ÊÇ·ñÕıÔÚÖ´ĞĞ
+	private boolean isRunning = false; // åŠ¨ç”»æ˜¯å¦æ­£åœ¨æ‰§è¡Œ
+
+	private ArrayList<WordButton> mHadSelectDataList; // å·²é€‰ä¸­çš„æ–‡å­—
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		// ½çÃæ³õÊ¼»¯
+		// ç•Œé¢åˆå§‹åŒ–
 		this.initView();
+
+		// åŠ è½½åº•éƒ¨æŒ‰é’®æ˜¾ç¤ºæ•°æ®
+		this.initData();
 	}
 
 	/**
-	 * ³õÊ¼»¯½çÃæ
+	 * åˆå§‹åŒ–ç•Œé¢
 	 */
 	private void initView() {
-		// start ¿Ø¼ş³õÊ¼»¯
+		// start æ§ä»¶åˆå§‹åŒ–
 		this.mViewPan = (ImageView) this.findViewById(R.id.iv_pan);
 		this.mViewPanBar = (ImageView) findViewById(R.id.iv_pan_bar);
 		this.mStartPlay = (ImageButton) findViewById(R.id.btn_start_play);
+		this.mGridView = (MyGridView) findViewById(R.id.gridView);
+		this.ll_select_word_container = (LinearLayout) findViewById(R.id.ll_select_word_container);
 
 		this.mStartPlay.setOnClickListener(new View.OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				// 1¡¢µ±µã»÷²¥·Å°´Å¥Ê±£¬¹÷×Ó¿ªÊ¼½øÈë³ªÆ¬¼´Ö´ĞĞ¹÷×Ó½øÈë¶¯»­
-				// 2¡¢¹÷×Ó½øÈë³ªÅÌºó£¬³ªÅÌ¿ªÊ¼Ö´ĞĞ¹ö¶¯¶¯»­
-				// 3¡¢³ªÅÌ¶¯»­Ö´ĞĞÍê³Éºó£¬¹÷×Ó»Øµ½Ò»¿ªÊ¼µÄÎ»ÖÃ£¬¼´Ö´ĞĞ¹÷×Ó·µ»Ø¶¯»­
-				// Òò´ËĞèÒª¸øÕâÈıÖÖ¶¯»­ÉèÖÃ¶ÔÓ¦µÄ¶¯»­¼àÌıÆ÷£¬ÔÚ¶¯»­µÄ²»Í¬×´Ì¬Ö´ĞĞ¶ÔÓ¦µÄ¶¯»­
-				
-				// ¶¯»­Î´Ö´ĞĞ£¬Ôò¿ªÊ¼Ö´ĞĞ¶¯»­£¬²¢½«±ê¼ÇÉè¶¨Îª¡°Ö´ĞĞ¡±×´Ì¬
+				// 1ã€å½“ç‚¹å‡»æ’­æ”¾æŒ‰é’®æ—¶ï¼Œæ£å­å¼€å§‹è¿›å…¥å”±ç‰‡å³æ‰§è¡Œæ£å­è¿›å…¥åŠ¨ç”»
+				// 2ã€æ£å­è¿›å…¥å”±ç›˜åï¼Œå”±ç›˜å¼€å§‹æ‰§è¡Œæ»šåŠ¨åŠ¨ç”»
+				// 3ã€å”±ç›˜åŠ¨ç”»æ‰§è¡Œå®Œæˆåï¼Œæ£å­å›åˆ°ä¸€å¼€å§‹çš„ä½ç½®ï¼Œå³æ‰§è¡Œæ£å­è¿”å›åŠ¨ç”»
+				// å› æ­¤éœ€è¦ç»™è¿™ä¸‰ç§åŠ¨ç”»è®¾ç½®å¯¹åº”çš„åŠ¨ç”»ç›‘å¬å™¨ï¼Œåœ¨åŠ¨ç”»çš„ä¸åŒçŠ¶æ€æ‰§è¡Œå¯¹åº”çš„åŠ¨ç”»
+
+				// åŠ¨ç”»æœªæ‰§è¡Œï¼Œåˆ™å¼€å§‹æ‰§è¡ŒåŠ¨ç”»ï¼Œå¹¶å°†æ ‡è®°è®¾å®šä¸ºâ€œæ‰§è¡Œâ€çŠ¶æ€
 				if (!isRunning) {
 					mViewPanBar.startAnimation(mBarInAnim);
 					isRunning = true;
@@ -65,8 +84,8 @@ public class MainActivity extends Activity {
 		});
 		// end
 
-		// start ¶¯»­³õÊ¼»¯
-		// ³ªÆ¬¶¯»­³õÊ¼»¯
+		// start åŠ¨ç”»åˆå§‹åŒ–
+		// å”±ç‰‡åŠ¨ç”»åˆå§‹åŒ–
 		this.mPanAnim = AnimationUtils.loadAnimation(this, R.anim.rotate);
 		this.mPanInterpolator = new LinearInterpolator();
 		mPanAnim.setInterpolator(mPanInterpolator);
@@ -84,19 +103,19 @@ public class MainActivity extends Activity {
 
 			@Override
 			public void onAnimationEnd(Animation animation) {
-				// ³ªÅÌ¹ö¶¯¶¯»­Ö´ĞĞÍêºóÖ´ĞĞ¹÷×Ó·µ»Ø¶¯»­£¬ÕâÊ±¹÷×Ó·µ»Ø×î³õÎ»ÖÃ
+				// å”±ç›˜æ»šåŠ¨åŠ¨ç”»æ‰§è¡Œå®Œåæ‰§è¡Œæ£å­è¿”å›åŠ¨ç”»ï¼Œè¿™æ—¶æ£å­è¿”å›æœ€åˆä½ç½®
 				mViewPanBar.startAnimation(mBarOutAnim);
-				// ¶¯»­Ö´ĞĞÍê³Éºó£¬Éè¶¨ÔËĞĞ×´Ì¬ÎªÍ£Ö¹£¬²¢½«²¥·Å°´Å¥ÏÔÊ¾³öÀ´
+				// åŠ¨ç”»æ‰§è¡Œå®Œæˆåï¼Œè®¾å®šè¿è¡ŒçŠ¶æ€ä¸ºåœæ­¢ï¼Œå¹¶å°†æ’­æ”¾æŒ‰é’®æ˜¾ç¤ºå‡ºæ¥
 				isRunning = false;
 				mStartPlay.setVisibility(View.VISIBLE);
 			}
 		});
 
-		// ¹÷×Ó½øÈë¶¯»­
+		// æ£å­è¿›å…¥åŠ¨ç”»
 		this.mBarInAnim = AnimationUtils.loadAnimation(this, R.anim.rotate_45);
 		this.mBarInInterpolator = new LinearInterpolator();
 		mBarInAnim.setInterpolator(mBarInInterpolator);
-		mBarInAnim.setFillAfter(true); // µ±¶¯»­½áÊøºóÍ£ÁôÔÚµ±Ç°Î»ÖÃ£¬¶ø²»ÊÇ»Øµ½³õÊ¼Î»ÖÃ
+		mBarInAnim.setFillAfter(true); // å½“åŠ¨ç”»ç»“æŸååœç•™åœ¨å½“å‰ä½ç½®ï¼Œè€Œä¸æ˜¯å›åˆ°åˆå§‹ä½ç½®
 		mBarInAnim.setAnimationListener(new Animation.AnimationListener() {
 
 			@Override
@@ -111,16 +130,16 @@ public class MainActivity extends Activity {
 
 			@Override
 			public void onAnimationEnd(Animation animation) {
-				// ¹÷×Ó½øÈë¶¯»­Ö´ĞĞÍê³Éºó£¬¿ªÊ¼Ö´ĞĞ³ªÅÌ¹ö¶¯¶¯»­£¬³ªÅÌ¿ªÊ¼¹ö¶¯
+				// æ£å­è¿›å…¥åŠ¨ç”»æ‰§è¡Œå®Œæˆåï¼Œå¼€å§‹æ‰§è¡Œå”±ç›˜æ»šåŠ¨åŠ¨ç”»ï¼Œå”±ç›˜å¼€å§‹æ»šåŠ¨
 				mViewPan.startAnimation(mPanAnim);
 			}
 		});
 
-		// ¹÷×Ó·µ»Ø¶¯»­
+		// æ£å­è¿”å›åŠ¨ç”»
 		this.mBarOutAnim = AnimationUtils.loadAnimation(this, R.anim.rotate_d_45);
 		this.mBarOutInterpolator = new LinearInterpolator();
 		mBarOutAnim.setInterpolator(mBarOutInterpolator);
-		mBarOutAnim.setFillAfter(true); // µ±¶¯»­½áÊøºóÍ£ÁôÔÚµ±Ç°Î»ÖÃ£¬¶ø²»ÊÇ»Øµ½³õÊ¼Î»ÖÃ
+		mBarOutAnim.setFillAfter(true); // å½“åŠ¨ç”»ç»“æŸååœç•™åœ¨å½“å‰ä½ç½®ï¼Œè€Œä¸æ˜¯å›åˆ°åˆå§‹ä½ç½®
 		mBarOutAnim.setAnimationListener(new Animation.AnimationListener() {
 
 			@Override
@@ -139,5 +158,69 @@ public class MainActivity extends Activity {
 			}
 		});
 		// end
+
+		initHadSelectWordView();
+	}
+
+	private void initData() {
+
+		initSelectData();
+
+		initHadSelectData();
+	}
+
+	/**
+	 * åŠ è½½åº•éƒ¨å¾…é€‰æ•°æ®
+	 */
+	private void initSelectData() {
+		ArrayList<WordButton> arrayList = new ArrayList<WordButton>();
+		WordButton wordButton = null;
+
+		for (int i = 0; i < 24; i++) {
+			wordButton = new WordButton();
+			wordButton.wordText = "æ«";
+			arrayList.add(wordButton);
+		}
+
+		this.mGridView.updateData(arrayList);
+	}
+
+	/**
+	 * åŠ è½½å·²é€‰æ–‡å­—
+	 * 
+	 * @return
+	 */
+	private ArrayList<WordButton> initHadSelectData() {
+		ArrayList<WordButton> arrayList = new ArrayList<WordButton>();
+
+		for (int i = 0; i < 4; i++) {
+			View view = Utils.getView(MainActivity.this, R.layout.my_gridview_item);
+
+			WordButton holder = new WordButton();
+
+			holder.viewButton = (Button) view.findViewById(R.id.btn_item);
+
+			holder.isVisible = false;
+			holder.viewButton.setTextColor(Color.RED);
+			holder.viewButton.setBackgroundResource(R.drawable.game_wordblank);
+			arrayList.add(holder);
+		}
+
+		return arrayList;
+	}
+
+	/**
+	 * åŠ è½½å·²é€‰æ–‡å­—ç•Œé¢
+	 */
+	private void initHadSelectWordView() {
+		this.mHadSelectDataList = initHadSelectData();
+
+		for (int i = 0; i < this.mHadSelectDataList.size(); i++) {
+			WordButton wordButton = this.mHadSelectDataList.get(i);
+			// è®¾ç½®æ¯ä¸€ä¸ªåŠ å…¥åˆ°LinearLayoutä¸­çš„Buttonçš„å¤§å°
+			LayoutParams params = new LayoutParams(80, 80);
+			// å°†ButtonåŠ å…¥è‡³LinearLayoutä¸­
+			ll_select_word_container.addView(wordButton.viewButton, params);
+		}
 	}
 }
