@@ -2,6 +2,7 @@ package com.zhi.app.myview;
 
 import java.util.ArrayList;
 
+import com.zhi.app.inter.IWordButtonClickListener;
 import com.zhi.app.model.WordButton;
 import com.zhi.app.ui.R;
 
@@ -23,12 +24,16 @@ import android.widget.GridView;
  */
 public class MyGridView extends GridView {
 	
+	public static final int WORD_COUNT = 24;
+	
 	private ArrayList<WordButton> mArrayList = new ArrayList<WordButton>();
 	private Context mContext;
 	private LayoutInflater mInflater;
 	private GridAdapter mAdapter;
 	
 	private Animation mScaleAnim; // 文字Button缩放动画
+	
+	private IWordButtonClickListener mWordButtonClickListener;
 
 	public MyGridView(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -51,6 +56,14 @@ public class MyGridView extends GridView {
 		this.mAdapter.notifyDataSetChanged();
 	}
 	
+	/**
+	 * 注册文字按钮点击事件
+	 * @param listener
+	 */
+	public void setOnWordButtonClickListener(IWordButtonClickListener listener) {
+		this.mWordButtonClickListener = listener;
+	}
+	
 	class GridAdapter extends BaseAdapter {
 
 		@Override
@@ -71,7 +84,7 @@ public class MyGridView extends GridView {
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			
-			WordButton viewHolder;
+			final WordButton viewHolder;
 			
 			if(convertView == null) {
 				
@@ -92,6 +105,14 @@ public class MyGridView extends GridView {
 			
 			// 给自定义文字显示Button设定显示文字
 			viewHolder.viewButton.setText(viewHolder.wordText);
+			
+			viewHolder.viewButton.setOnClickListener(new View.OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					mWordButtonClickListener.onWordButtonClick(viewHolder);
+				}
+			});
 			
 			// 给convertView设置动画
 			convertView.startAnimation(mScaleAnim);

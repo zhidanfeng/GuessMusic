@@ -4,6 +4,6 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/word_button_selector" 
-    android:text="d"
+    android:text=""
     android:textColor="@color/black"
     android:textSize="25sp"/>
