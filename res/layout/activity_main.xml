@@ -18,5 +18,8 @@
         <!-- 底部文字按钮显示栏 -->
         <include layout="@layout/word_show_layout" />
     </LinearLayout>
+    
+    <!-- 浮动按钮 -->
+    <include layout="@layout/float_button_layout" />
 
 </FrameLayout>

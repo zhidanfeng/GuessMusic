@@ -53,4 +53,8 @@ public class Utils {
 		
 		return word;
 	}
+	
+	public static int getIntegerValues(Context context, int id) {
+		return context.getResources().getInteger(id);
+	}
 }

@@ -5,10 +5,14 @@ package com.zhi.app.data;
  * @author zhidf
  *
  */
-public class SongData {
+public class Constant {
 	public static final int INDEX_FILE_NAME = 0;
 
+	/** 歌曲索引 */
 	public static final int INDEX_SONG_NAME = 1;
+	
+	/** 可用的金币 */
+	public static final int AVAILABLE_COIN = 1000;
 
 	public static final String[][] SONG_INFO = { 
 		{ "__00000.m4a", "征服" }, 
