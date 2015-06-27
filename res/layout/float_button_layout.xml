@@ -19,6 +19,7 @@
             android:background="@drawable/game_level_title" />
 
         <TextView
+            android:id="@+id/tv_curr_stage_index"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

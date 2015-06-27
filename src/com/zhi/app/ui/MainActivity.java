@@ -9,6 +9,7 @@ import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -21,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.zhi.app.data.Constant;
+import com.zhi.app.inter.IDialogBtnClickListener;
 import com.zhi.app.inter.IWordButtonClickListener;
 import com.zhi.app.model.Song;
 import com.zhi.app.model.WordButton;
@@ -47,6 +49,10 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 	private Animation mBarOutAnim;
 	private LinearInterpolator mBarOutInterpolator;
 	// end
+	
+	private LinearLayout ll_answer_is_right;
+	
+	private TextView tv_curr_stage_index; // 当前关卡
 
 	private boolean isRunning = false; // 动画是否正在执行
 
@@ -54,7 +60,7 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 	private ArrayList<WordButton> mHadSelectDataList; // 已选中的文字
 
 	private Song mCurrSong; // 当前关卡的歌曲
-	private int mCurrStageIndex = 3; // 当前关卡的索引，即第几关
+	private int mCurrStageIndex = 1; // 当前关卡的索引，即第几关
 
 	// add by zhidf 2015.6.20 定义答案检测结果常量：正确、错误、缺失
 	/** 答案正确 */
@@ -78,7 +84,7 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 		this.initView();
 
 		// 加载底部按钮显示数据
-		this.initData();
+		this.initCurrStageData();
 	}
 
 	/**
@@ -94,6 +100,8 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 
 		this.tv_curr_coin = (TextView) findViewById(R.id.txt_bar_coins);
 		this.tv_curr_coin.setText(this.mCurrCoinNum + "");
+		
+		tv_curr_stage_index = (TextView) findViewById(R.id.tv_curr_stage_index);
 
 		// 设置文字按钮点击事件
 		this.mGridView.setOnWordButtonClickListener(this);
@@ -191,25 +199,48 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 			}
 		});
 		// end
-
-		initHadSelectWordView();
-
+		
+		// 处理删除一个错误答案的业务逻辑
 		handleFloatDeleteBtn();
 
+		// 提示一个正确答案的提示按钮的事件处理
 		handleFloatShowTipBtn();
 	}
+	
+	/**
+	 * 初始化当前关卡数据
+	 */
+	private void initCurrStageData() {
 
-	private void initData() {
+		// 设置顶部显示的当前关卡
+		tv_curr_stage_index.setText(this.mCurrStageIndex + "");
+		
+		// 加载当前关卡歌曲信息，因为mCurrStageIndex设置了初值1，而数组下标从0开始，故需要-1
+		this.mCurrSong = this.loadCurrStageSongData(this.mCurrStageIndex - 1);
+		
+		// 加载底部待选按钮
+		initWaitSelectData();
 
-		initSelectData();
+		// 加载待猜文字按钮
+		this.mHadSelectDataList = initWaitGuessSongData();
+		
+		// 清空已选文字按钮区域的控件，防止跳转至下一关的时候上一关的数据仍然出现
+		ll_select_word_container.removeAllViews();
 
-		initWaitGuessSongData();
+		// 加载已选文字按钮，将待选文字按钮布局放入事先放置好的LinearLayout容器中
+		for (int i = 0; i < this.mHadSelectDataList.size(); i++) {
+			WordButton wordButton = this.mHadSelectDataList.get(i);
+			// 设置每一个加入到LinearLayout中的Button的大小
+			LayoutParams params = new LayoutParams(80, 80);
+			// 将Button加入至LinearLayout中
+			ll_select_word_container.addView(wordButton.viewButton, params);
+		}
 	}
 
 	/**
 	 * 加载底部待选数据
 	 */
-	private void initSelectData() {
+	private void initWaitSelectData() {
 		mWaitSelectDataList = new ArrayList<WordButton>();
 		WordButton wordButton = null;
 
@@ -234,7 +265,7 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 	 */
 	private ArrayList<WordButton> initWaitGuessSongData() {
 		ArrayList<WordButton> arrayList = new ArrayList<WordButton>();
-
+		
 		// 根据当前关卡歌曲的长度动态设置待填充的选择框的个数
 		for (int i = 0; i < this.mCurrSong.getSongNameLength(); i++) {
 			View view = Utils.getView(MainActivity.this, R.layout.my_gridview_item);
@@ -278,29 +309,6 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 	}
 
 	/**
-	 * 加载已选文字界面<br/>
-	 * <p>
-	 * 根据当前歌曲的名称的个数来加载显示的方框数
-	 * </p>
-	 */
-	private void initHadSelectWordView() {
-
-		// 因为mCurrStageIndex设置了初值1，而数组下标从0开始，故需要-1
-		this.mCurrSong = this.loadCurrStageSongData(this.mCurrStageIndex - 1);
-
-		this.mHadSelectDataList = initWaitGuessSongData();
-
-		// 将待选文字按钮布局放入事先放置好的LinearLayout容器中
-		for (int i = 0; i < this.mHadSelectDataList.size(); i++) {
-			WordButton wordButton = this.mHadSelectDataList.get(i);
-			// 设置每一个加入到LinearLayout中的Button的大小
-			LayoutParams params = new LayoutParams(80, 80);
-			// 将Button加入至LinearLayout中
-			ll_select_word_container.addView(wordButton.viewButton, params);
-		}
-	}
-
-	/**
 	 * 文字按钮点击后的实现方法，即文字按钮点击之后的所有后续逻辑将在此完成
 	 */
 	@Override
@@ -309,13 +317,19 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 
 		// add by zhidf 2015.6.20 检查所填歌曲名称是否正确
 		int answerFlag = this.checkTheAnswer();
+		
 		if (answerFlag == ANSWER_IS_RIGHT) {
-			Toast.makeText(MainActivity.this, "正确", Toast.LENGTH_SHORT).show();
+			
+			// 显示答案正确的过关界面
+			handleAnswerIsRightView();
+			
 		} else if (answerFlag == ANSWER_IS_WRONG) {
-			// Toast.makeText(MainActivity.this, "错误",
-			// Toast.LENGTH_SHORT).show();
+			
+			// 答案错误闪烁文字
 			shakeTheAnswer();
+			
 		} else if (answerFlag == ANSWER_IS_INCOMPLETE) {
+			
 			Toast.makeText(MainActivity.this, "不完整", Toast.LENGTH_SHORT).show();
 		}
 		// end
@@ -508,25 +522,7 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 
 			@Override
 			public void onClick(View v) {
-				int pay_delete_coin = Utils.getIntegerValues(MainActivity.this,
-						R.integer.pay_delete_word);
-				// 1、扣除金币
-				// 1.1 先判断是否有足够的金币，如果有则扣除并显示剩余金币，否则提示用户金币不足
-				boolean flag = checkTheCoinIsEnough(-pay_delete_coin);
-				if (flag) {
-					// 2、隐藏一个错误的答案。PS：不能隐藏掉正确的答案
-					WordButton hideWordButton = findIsNotAnswer();
-					if (hideWordButton == null) {
-						return;
-					}
-
-					hideWordButton.isVisible = false;
-					hideWordButton.viewButton.setVisibility(View.INVISIBLE);
-
-					handleTheCoinNum(-pay_delete_coin);
-				} else {
-					Toast.makeText(MainActivity.this, "不够了", Toast.LENGTH_SHORT).show();
-				}
+				Utils.showDialog(MainActivity.this, "是否花费30个金币", delOneWordBtnListener);
 			}
 		});
 	}
@@ -606,24 +602,7 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 
 			@Override
 			public void onClick(View v) {
-				// 遍历已选文字框，如果有一个是空的，则可以将找到的那个正确答案填在这个空位上，并且退出循环
-				// 否则会将整个已选文字框全部填满
-				for (int i = 0; i < mHadSelectDataList.size(); i++) {
-					if (mHadSelectDataList.get(i).wordText.length() == 0) {
-						// 调用之前编写的按钮点击方法来实现自动将提示答案填写在已选文字框中
-						onWordButtonClick(findIsAnswer(i));
-
-						int pay_tip_coin = Utils.getIntegerValues(MainActivity.this, R.integer.pay_tip_answer);
-						if(checkTheCoinIsEnough(-pay_tip_coin)) {
-							// 扣除提示正确答案所需花费的金币
-							handleTheCoinNum(-pay_tip_coin);
-						} else {
-							Toast.makeText(MainActivity.this, "不够了", Toast.LENGTH_SHORT).show();
-						}
-						
-						break;
-					}
-				}
+				Utils.showDialog(MainActivity.this, "是否花费90个金币", showTipBtnListener);
 			}
 		});
 	}
@@ -649,4 +628,110 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 	private void handleFloatShareBtn() {
 
 	}
+	
+	private void handleAnswerIsRightView() {
+		
+		this.mViewPan.clearAnimation();
+		
+		// 设置答案正确的过关界面为可见
+		ll_answer_is_right = (LinearLayout) findViewById(R.id.ll_answer_is_right);
+		ll_answer_is_right.setVisibility(View.VISIBLE);
+		
+		// add by zhidf 2015.6.27 修复显示答案正确界面时下层界面的控件仍然可以获得焦点的问题
+		ll_answer_is_right.setOnTouchListener(new View.OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				return true;
+			}
+		});
+		// end by zhidf 2015.6.27
+		
+		TextView tv_pass_stage = (TextView) ll_answer_is_right.findViewById(R.id.tv_pass_stage);
+		tv_pass_stage.setText(mCurrStageIndex + "");
+		
+		TextView tv_pass_song_name = (TextView) ll_answer_is_right.findViewById(R.id.tv_pass_song_name);
+		tv_pass_song_name.setText(mCurrSong.getSongName());
+		
+		ImageButton btn_next_question = (ImageButton) ll_answer_is_right.findViewById(R.id.btn_next_question);
+		btn_next_question.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Toast.makeText(MainActivity.this, "下一关", Toast.LENGTH_SHORT).show();
+				handleNextQuestionEvent();
+			}
+		});
+		
+		ImageButton btn_share_to_weixin = (ImageButton) ll_answer_is_right.findViewById(R.id.btn_share_to_weixin);
+		btn_share_to_weixin.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Toast.makeText(MainActivity.this, "分享到微信", Toast.LENGTH_SHORT).show();
+			}
+		});
+	}
+	
+	/**
+	 * 处理“下一关”的点击事件
+	 */
+	private void handleNextQuestionEvent() {
+		this.mCurrStageIndex += 1;
+		ll_answer_is_right.setVisibility(View.INVISIBLE);
+		
+		initCurrStageData();
+	}
+	
+	// 点击删除一个错误答案时弹出的对话框的“确定”按钮将会执行如下的onClick()方法
+	IDialogBtnClickListener delOneWordBtnListener = new IDialogBtnClickListener() {
+		
+		@Override
+		public void onClick() {
+			int pay_delete_coin = Utils.getIntegerValues(MainActivity.this,
+					R.integer.pay_delete_word);
+			// 1、扣除金币
+			// 1.1 先判断是否有足够的金币，如果有则扣除并显示剩余金币，否则提示用户金币不足
+			boolean flag = checkTheCoinIsEnough(-pay_delete_coin);
+			if (flag) {
+				// 2、隐藏一个错误的答案。PS：不能隐藏掉正确的答案
+				WordButton hideWordButton = findIsNotAnswer();
+				if (hideWordButton == null) {
+					return;
+				}
+
+				hideWordButton.isVisible = false;
+				hideWordButton.viewButton.setVisibility(View.INVISIBLE);
+
+				handleTheCoinNum(-pay_delete_coin);
+			} else {
+				Toast.makeText(MainActivity.this, "不够了", Toast.LENGTH_SHORT).show();
+			}
+		}
+	};
+	
+	IDialogBtnClickListener showTipBtnListener = new IDialogBtnClickListener() {
+		
+		@Override
+		public void onClick() {
+			// 遍历已选文字框，如果有一个是空的，则可以将找到的那个正确答案填在这个空位上，并且退出循环
+			// 否则会将整个已选文字框全部填满
+			for (int i = 0; i < mHadSelectDataList.size(); i++) {
+				if (mHadSelectDataList.get(i).wordText.length() == 0) {
+					// 调用之前编写的按钮点击方法来实现自动将提示答案填写在已选文字框中
+					onWordButtonClick(findIsAnswer(i));
+
+					int pay_tip_coin = Utils.getIntegerValues(MainActivity.this, R.integer.pay_tip_answer);
+					if(checkTheCoinIsEnough(-pay_tip_coin)) {
+						// 扣除提示正确答案所需花费的金币
+						handleTheCoinNum(-pay_tip_coin);
+					} else {
+						Toast.makeText(MainActivity.this, "不够了", Toast.LENGTH_SHORT).show();
+					}
+					
+					break;
+				}
+			}
+		}
+	};
 }

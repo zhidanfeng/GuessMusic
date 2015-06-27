@@ -57,7 +57,10 @@ public class MyGridView extends GridView {
 	public void updateData(ArrayList<WordButton> list) {
 		this.mArrayList = list;
 		// 通知适配器数据集已经改变了，刷新界面
-		this.mAdapter.notifyDataSetChanged();
+		//mod by zhidf 2015.6.23 修改GridView刷新方式
+		// 不能使用notifyDataSetChanged，因为每一关的数据都不一样，所以需要给每一关重新设置数据源
+		//this.mAdapter.notifyDataSetChanged();
+		setAdapter(mAdapter);
 	}
 
 	/**
