@@ -28,6 +28,7 @@ import com.zhi.app.model.Song;
 import com.zhi.app.model.WordButton;
 import com.zhi.app.myview.MyGridView;
 import com.zhi.app.util.MyLog;
+import com.zhi.app.util.MyMediaPlayer;
 import com.zhi.app.util.Utils;
 
 public class MainActivity extends Activity implements IWordButtonClickListener {
@@ -80,13 +81,33 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		int[] datas = Utils.readData(this);
+		this.mCurrStageIndex = datas[Constant.INDEX_CURR_STAGE];
+		this.mCurrCoinNum = datas[Constant.INDEX_COIN_NUM];
+		
 		// 界面初始化
 		this.initView();
 
 		// 加载底部按钮显示数据
 		this.initCurrStageData();
+		
 	}
 
+	/**
+	 * add by zhidf 2015.6.28
+	 */
+	@Override
+	protected void onPause() {
+		super.onPause();
+		
+		// 当Activity处于onPause()状态时清除动画与停止正在播放的音乐
+		// 防止MainActivity被切换至后台时音乐仍然在播放
+		this.mViewPan.clearAnimation();
+		MyMediaPlayer.stop();
+		
+		Utils.saveData(this, this.mCurrStageIndex, this.mCurrCoinNum);
+	}
+	
 	/**
 	 * 初始化界面
 	 */
@@ -110,18 +131,9 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 
 			@Override
 			public void onClick(View v) {
-				// 1、当点击播放按钮时，棍子开始进入唱片即执行棍子进入动画
-				// 2、棍子进入唱盘后，唱盘开始执行滚动动画
-				// 3、唱盘动画执行完成后，棍子回到一开始的位置，即执行棍子返回动画
-				// 因此需要给这三种动画设置对应的动画监听器，在动画的不同状态执行对应的动画
-
-				// 动画未执行，则开始执行动画，并将标记设定为“执行”状态
-				if (!isRunning) {
-					mViewPanBar.startAnimation(mBarInAnim);
-					isRunning = true;
-					mStartPlay.setVisibility(View.INVISIBLE);
-				}
+				doPlay();
 			}
+
 		});
 		// end
 
@@ -231,10 +243,35 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 		for (int i = 0; i < this.mHadSelectDataList.size(); i++) {
 			WordButton wordButton = this.mHadSelectDataList.get(i);
 			// 设置每一个加入到LinearLayout中的Button的大小
-			LayoutParams params = new LayoutParams(80, 80);
+			LayoutParams params = new LayoutParams(120, 120);
 			// 将Button加入至LinearLayout中
 			ll_select_word_container.addView(wordButton.viewButton, params);
 		}
+		
+		// add by zhidf 2015.6.28 增加音乐播放
+		doPlay();
+	}
+	
+	/**
+	 * 点击播放按钮，播放歌曲
+	 * <br/>
+	 * <remark>add by zhidf 2015.6.28 处理播放按钮逻辑</remark>
+	 */
+	private void doPlay() {
+		// 1、当点击播放按钮时，棍子开始进入唱片即执行棍子进入动画
+		// 2、棍子进入唱盘后，唱盘开始执行滚动动画
+		// 3、唱盘动画执行完成后，棍子回到一开始的位置，即执行棍子返回动画
+		// 因此需要给这三种动画设置对应的动画监听器，在动画的不同状态执行对应的动画
+
+		// 动画未执行，则开始执行动画，并将标记设定为“执行”状态
+		if (!isRunning) {
+			mViewPanBar.startAnimation(mBarInAnim);
+			isRunning = true;
+			mStartPlay.setVisibility(View.INVISIBLE);
+		}
+		
+		// add by zhidf 2015.6.28 增加音乐播放
+		MyMediaPlayer.play(MainActivity.this, mCurrSong.getSongFileName());
 	}
 
 	/**
@@ -629,8 +666,12 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 
 	}
 	
+	/**
+	 * 显示过关界面
+	 */
 	private void handleAnswerIsRightView() {
 		
+		// 过关了，清除盘片的播放动画
 		this.mViewPan.clearAnimation();
 		
 		// 设置答案正确的过关界面为可见
@@ -658,7 +699,10 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 			
 			@Override
 			public void onClick(View v) {
-				Toast.makeText(MainActivity.this, "下一关", Toast.LENGTH_SHORT).show();
+				if(mCurrStageIndex == Constant.SONG_INFO.length) {
+					Toast.makeText(MainActivity.this, "已通关", Toast.LENGTH_SHORT).show();
+					return;
+				}
 				handleNextQuestionEvent();
 			}
 		});
@@ -671,6 +715,13 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 				Toast.makeText(MainActivity.this, "分享到微信", Toast.LENGTH_SHORT).show();
 			}
 		});
+		
+		handleTheCoinNum(30);
+		
+		// add by zhidf 2015.6.28 过关了停止播放音乐
+		MyMediaPlayer.stop();
+		
+		MyMediaPlayer.playSoundEffect(MainActivity.this, MyMediaPlayer.INDEX_COIN_SOUNDEFFECT);
 	}
 	
 	/**
@@ -733,5 +784,6 @@ public class MainActivity extends Activity implements IWordButtonClickListener {
 				}
 			}
 		}
+		
 	};
 }

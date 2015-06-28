@@ -1,8 +1,15 @@
 package com.zhi.app.util;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
+import com.zhi.app.data.Constant;
 import com.zhi.app.inter.IDialogBtnClickListener;
 import com.zhi.app.ui.R;
 
@@ -19,7 +26,7 @@ import android.widget.TextView;
 public class Utils {
 
 	private static Dialog mAlertDialog = null;
-	
+
 	/**
 	 * 获取View
 	 * 
@@ -99,8 +106,9 @@ public class Utils {
 	 * @param message
 	 * @param listener
 	 */
-	public static void showDialog(Context context, String message, final IDialogBtnClickListener listener) {
-		
+	public static void showDialog(final Context context, String message,
+			final IDialogBtnClickListener listener) {
+
 		// 设置dialog的主题样式
 		AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.Theme_AlertDialog);
 		View view = getView(context, R.layout.layout_dialog);
@@ -110,8 +118,9 @@ public class Utils {
 		tv_dialog_message.setText(message);
 
 		ImageButton btn_dialog_btn_ok = (ImageButton) view.findViewById(R.id.btn_dialog_btn_ok);
-		ImageButton btn_dialog_btn_cancel = (ImageButton) view.findViewById(R.id.btn_dialog_btn_cancel);
-		
+		ImageButton btn_dialog_btn_cancel = (ImageButton) view
+				.findViewById(R.id.btn_dialog_btn_cancel);
+
 		builder.setView(view);
 		mAlertDialog = builder.create();
 
@@ -120,14 +129,17 @@ public class Utils {
 			@Override
 			public void onClick(View v) {
 				// 关闭对话框
-				if(mAlertDialog != null) {
+				if (mAlertDialog != null) {
 					mAlertDialog.cancel();
 				}
-				
+
 				// 点击“确定”按钮时回调click方法，执行对应的点击逻辑
-				if(listener != null) {
+				if (listener != null) {
 					listener.onClick();
 				}
+
+				// add by zhidf 2015.6.28
+				MyMediaPlayer.playSoundEffect(context, MyMediaPlayer.INDEX_CONFIRM_SOUNDEFFECT);
 			}
 		});
 
@@ -135,13 +147,95 @@ public class Utils {
 
 			@Override
 			public void onClick(View v) {
-				if(mAlertDialog != null) {
+				if (mAlertDialog != null) {
 					mAlertDialog.cancel();
 				}
+
+				// add by zhidf 2015.6.28
+				MyMediaPlayer.playSoundEffect(context, MyMediaPlayer.INDEX_CANCEL_SOUNDEFFECT);
 			}
 		});
 
 		// 显示对话框
 		mAlertDialog.show();
+	}
+
+	/**
+	 * 保存当前关卡数据
+	 * 
+	 * @param context
+	 *            上下文
+	 * @param currStageIndex
+	 *            当前关卡
+	 * @param coinNum
+	 *            当前金币数
+	 */
+	public static void saveData(Context context, int currStageIndex, int coinNum) {
+		FileOutputStream fos = null;
+		DataOutputStream dos = null;
+
+		try {
+			fos = context.openFileOutput(Constant.SAVE_FILE_NAME, context.MODE_PRIVATE);
+
+			dos = new DataOutputStream(fos);
+			dos.writeInt(currStageIndex);
+			dos.writeInt(coinNum);
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+
+			try {
+				if (dos != null) {
+					dos.close();
+				}
+
+				if (fos != null) {
+					fos.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * 读取游戏数据
+	 * 
+	 * @param context
+	 * @return
+	 */
+	public static int[] readData(Context context) {
+		int[] datas = new int[] {1, Constant.AVAILABLE_COIN};
+		FileInputStream fis = null;
+		DataInputStream dis = null;
+
+		try {
+			fis = context.openFileInput(Constant.SAVE_FILE_NAME);
+
+			dis = new DataInputStream(fis);
+			datas[Constant.INDEX_CURR_STAGE] = dis.readInt();
+			datas[Constant.INDEX_COIN_NUM] = dis.readInt();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (dis != null) {
+					dis.close();
+				}
+
+				if (fis != null) {
+					fis.close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return datas;
 	}
 }

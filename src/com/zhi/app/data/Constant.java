@@ -27,4 +27,8 @@ public class Constant {
 		{ "__00009.m4a", "老男孩" }, 
 		{ "__00010.m4a", "龙的传人" },
 	};
+	
+	public static final String SAVE_FILE_NAME = "data.dat";
+	public static final int INDEX_CURR_STAGE = 0;
+	public static final int INDEX_COIN_NUM = 1;
 }
